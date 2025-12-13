@@ -1,98 +1,131 @@
-# labyrinth_game/player_actions.py
-def get_input(prompt="> "):
+import time
+from constants import ROOMS
+from utils import print_slow
+from utils import describe_current_room
+from utils import random_event
+from utils import print_slow
+
+
+def get_input(prompt="🎮 > "):
     try:
         return input(prompt)
     except (KeyboardInterrupt, EOFError):
-        print("\nВыход из игры.")
+        print("\n🚪 Выход из игры...")
         return "quit"
 
 
 def show_inventory(game_state):
     inventory = game_state['player_inventory']
     if inventory:
-        print("Инвентарь:", ", ".join(inventory))
+        print("\n" + "═" * 50)
+        print("🎒 ВАШ ИНВЕНТАРЬ:")
+        print("═" * 50)
+        for i, item in enumerate(inventory, 1):
+            print(f"  {i}. {item}")
+        print("═" * 50)
     else:
-        print("Инвентарь пуст")
+        print("\n🎒 Ваш инвентарь пуст...")
 
 
 def move_player(game_state, direction):
-    """Переместить игрока в указанном направлении"""
-    from constants import ROOMS
 
     current_room = game_state['current_room']
     room = ROOMS[current_room]
 
-    # Проверяем, есть ли выход в этом направлении
     if direction in room['exits']:
         next_room = room['exits'][direction]
 
-        # Проверка на treasure_room
         if next_room == 'treasure_room':
-            if 'treasure_key' in game_state['player_inventory'] or 'rusty_key' in game_state['player_inventory']:
-                print(
-                    "Вы используете найденный ключ, чтобы открыть путь в комнату сокровищ.")
+
+            has_key = False
+            for item in game_state['player_inventory']:
+                if 'ключ' in str(item).lower():
+                    has_key = True
+                    break
+
+            if has_key:
+                print("Вы используете найденный ключ, чтобы открыть "
+                      "путь в комнату сокровищ.")
             else:
                 print("Дверь заперта. Нужен ключ, чтобы пройти дальше.")
                 return
 
-        # Меняем комнату игрока
         game_state['current_room'] = next_room
         game_state['steps_taken'] += 1
 
-        # Случайное событие
-        from utils import random_event
         random_event(game_state)
 
-        # Показываем новую комнату
-        from utils import describe_current_room
         describe_current_room(game_state)
     else:
         print("Нельзя пойти в этом направлении.")
 
 
 def take_item(game_state, item_name):
-    """Взять предмет из комнаты"""
-    from constants import ROOMS
 
     current_room = game_state['current_room']
     room = ROOMS[current_room]
 
-    if item_name in room['items']:
-        # Добавляем в инвентарь
-        game_state['player_inventory'].append(item_name)
-        # Убираем из комнаты
-        room['items'].remove(item_name)
-        print(f"Вы подняли: {item_name}")
+    found_item = None
+    for item in room['items']:
+        if item_name.lower() in item.lower():
+            found_item = item
+            break
+
+    if found_item:
+
+        game_state['player_inventory'].append(found_item)
+
+        room['items'].remove(found_item)
+
+        print_slow(f"✨ Вы подняли: {found_item}")
+        time.sleep(0.3)
+
+        if 'факел' in found_item.lower():
+            print_slow("🔥 Факел загорается, отгоняя тени...")
+        elif 'ключ' in found_item.lower():
+            print_slow("🗝️  Ключ холодный на ощупь...")
+        elif 'книга' in found_item.lower():
+            print_slow("📖 Страницы шелестят древней мудростью...")
     else:
-        print("Такого предмета здесь нет.")
+        print_slow("Такого предмета здесь нет.")
 
 
 def use_item(game_state, item_name):
-    """Использовать предмет из инвентаря"""
+
     inventory = game_state['player_inventory']
 
-    if item_name not in inventory:
-        print("У вас нет такого предмета.")
+    found_item = None
+    for item in inventory:
+        if item_name.lower() in item.lower():
+            found_item = item
+            break
+
+    if not found_item:
+        print_slow("У вас нет такого предмета.")
         return
 
-    if item_name == 'torch':
-        print("Вы зажигаете факел. Стало светлее.")
-    elif item_name == 'sword':
-        print("Вы чувствуете уверенность с мечом в руках.")
-    elif item_name == 'bronze box':
-        if 'rusty_key' not in inventory:
-            print("Вы открываете бронзовую шкатулку и находите внутри rusty_key!")
-            inventory.append('rusty_key')
-        else:
-            print("Шкатулка пуста.")
-    elif item_name == 'treasure_key' or item_name == 'rusty_key':
-        from constants import ROOMS
+    if 'факел' in found_item.lower():
+        print_slow("🔥 Вы зажигаете факел! Стало светлее.")
+
+    elif 'ключ' in found_item.lower():
         current_room = game_state['current_room']
-        if current_room == 'treasure_room' and 'treasure chest' in ROOMS[current_room]['items']:
-            print("Вы применяете ключ, и замок щёлкает. Сундук открыт!")
-            print("В сундуке сокровище! Вы победили!")
+        if (current_room == 'treasure_room' and
+                'сундук' in str(ROOMS[current_room]['items']).lower()):
+            print_slow("\n" + "💎" * 25)
+            print_slow("🗝️  Вы вставляете ключ в замок сундука...")
+            time.sleep(0.7)
+            print_slow("🔓 Замок поддаётся! Сундук открывается!")
+            print_slow("✨ ВЫ НАШЛИ СОКРОВИЩА! ПОБЕДА!")
+            print_slow("💎" * 25)
             game_state['game_over'] = True
         else:
-            print("Здесь не к чему применить этот ключ.")
+            print_slow(
+                "🗝️  Вы вертите ключ в руках... Но здесь не к чему его применить.")
+
+    elif 'книга' in found_item.lower():
+        print_slow("📖 Вы открываете древнюю книгу...")
+        time.sleep(0.5)
+        print_slow("💡 На одной из страниц карта лабиринта!")
+
     else:
-        print(f"Вы не знаете, как использовать {item_name}.")
+        print_slow(f"🤷 Вы не знаете, как использовать {found_item}...")
