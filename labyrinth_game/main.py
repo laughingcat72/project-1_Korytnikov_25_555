@@ -10,30 +10,22 @@ def process_command(game_state, command):
     # Обработка односложных команд движения
     direction_commands = ['north', 'south', 'east', 'west']
     if parts[0] in direction_commands:
-        from player_actions import move_player
         move_player(game_state, parts[0])
         return
 
     if parts[0] == 'go' and len(parts) > 1:
-        from player_actions import move_player
         move_player(game_state, parts[1])
     elif parts[0] == 'take' and len(parts) > 1:
-        from player_actions import take_item
         take_item(game_state, ' '.join(parts[1:]))
     elif parts[0] == 'use' and len(parts) > 1:
-        from player_actions import use_item
         use_item(game_state, ' '.join(parts[1:]))
     elif command == 'look':
-        from utils import describe_current_room
         describe_current_room(game_state)
     elif command == 'inventory':
-        from player_actions import show_inventory
         show_inventory(game_state)
     elif command == 'solve':
-        from utils import solve_puzzle
         solve_puzzle(game_state)
     elif command == 'help':
-        from utils import show_help
         show_help()
     elif command == 'quit':
         game_state['game_over'] = True
