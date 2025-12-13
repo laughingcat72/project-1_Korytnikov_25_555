@@ -16,7 +16,7 @@ poetry install
 make install
 Запуск игры
 bash
- Запуск через poetry
+Запуск через poetry
 poetry run python labyrinth_game/main.py
 
 Или через make
@@ -85,3 +85,7 @@ labyrinth_game/
 ├── constants.py         # Константы, комнаты, команды
 ├── player_actions.py    # Действия игрока
 └── utils.py            # Вспомогательные функции
+
+
+Демонстраиця :
+https://drive.google.com/file/d/1w-qJizRd5m5dLAysjdQwmK55N0pseNJr/view?usp=sharing
